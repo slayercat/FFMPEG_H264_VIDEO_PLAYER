@@ -152,6 +152,12 @@ namespace FFMPEG_H264_PLAYER {
 	//该函数用于打开文件、寻找解码器并解码
 	System::Void MainForm::StartPlayFile(System::String^ filename)
 	{
+		//需要停止可能的现有线程以腾出解码器
+		if(threadPlay != nullptr)
+		{
+			StopPlayThread();
+		}
+
 		pFormatCtx = 0;
 		IntPtr ip = Marshal::StringToHGlobalAnsi(filename);
 		const char* pTemp = static_cast<const char*>(ip.ToPointer());
@@ -200,11 +206,7 @@ namespace FFMPEG_H264_PLAYER {
 		if(avcodec_open(pCodecCtx, pCodec)<0)
 			throw gcnew Exception("解码错误");
 
-		//开启新线程用于解码
-		if(threadPlay != nullptr)
-		{
-			StopPlayThread();
-		}
+		
 
 		threadPlay = gcnew System::Threading::Thread(gcnew System::Threading::ThreadStart(this, &MainForm::threadRunDecodeAndPlay));
 		threadPlay -> Start();
